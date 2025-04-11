@@ -17,7 +17,7 @@ public class MiniLenguajeBaseVisitor<T> extends AbstractParseTreeVisitor<T> impl
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitProgram(MiniLenguajeParser.ProgramContext ctx) { return visitChildren(ctx); }
+	@Override public T visitPrograma(MiniLenguajeParser.ProgramaContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
