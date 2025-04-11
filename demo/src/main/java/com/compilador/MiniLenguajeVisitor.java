@@ -11,11 +11,11 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface MiniLenguajeVisitor<T> extends ParseTreeVisitor<T> {
 	/**
-	 * Visit a parse tree produced by {@link MiniLenguajeParser#program}.
+	 * Visit a parse tree produced by {@link MiniLenguajeParser#programa}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitProgram(MiniLenguajeParser.ProgramContext ctx);
+	T visitPrograma(MiniLenguajeParser.ProgramaContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MiniLenguajeParser#token}.
 	 * @param ctx the parse tree
