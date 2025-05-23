@@ -4,12 +4,24 @@ programa
     : (sentencia)* EOF
     ;
 
+
 sentencia
     : sentenciaIf
     | declaracionFuncion
     | declaracionVariable
     | asignacion
     | retorno
+    | sentenciaBreak        // <— añadido
+    | sentenciaContinue     // <— añadido    
+    ;
+
+// Añadir las reglas para break y continue en el sintáctico
+sentenciaBreak
+    : BREAK PYC            
+    ;
+
+sentenciaContinue
+    : CONTINUE PYC
     ;
 
 sentenciaIf
@@ -49,6 +61,7 @@ tipo
     | CHAR
     | DOUBLE
     | VOID
+    | STRING  
     ;
 
 expresion
@@ -59,6 +72,7 @@ expresion
     | INTEGER                                 #expEntero
     | DECIMAL                                 #expDecimal
     | CHARACTER                               #expCaracter
+    | STRING_LITERAL                          # expCadena    // <— añadido
     | ID PA argumentos? PC                    #expFuncion
     ;
 
@@ -111,12 +125,20 @@ CHAR    : 'char' ;
 DOUBLE  : 'double' ;
 VOID    : 'void' ;
 
+// Nuevo tipo de dato
+STRING  : 'String' ;
+
 RETURN : 'return' ;
 
 ID : (LETRA | '_') (LETRA | DIGITO | '_')* ;
 INTEGER : DIGITO+ ;
 DECIMAL : INTEGER '.' INTEGER ;
 CHARACTER : '\'' (~['\r\n] | '\\' .) '\'' ;
+STRING_LITERAL : '"' (~["\\\r\n] | '\\' .)* '"' ;
+
+// Control de bucle
+BREAK    : 'break' ;
+CONTINUE : 'continue' ;
 
 COMENTARIO_LINEA : '//' ~[\r\n]* -> skip ;
 COMENTARIO_BLOQUE : '/*' .*? '*/' -> skip ;
