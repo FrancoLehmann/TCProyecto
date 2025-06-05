@@ -6,13 +6,17 @@ programa
 
 
 sentencia
-    : sentenciaIf
-    | declaracionFuncion
+    : declaracionFuncion
     | declaracionVariable
-    | asignacion
+    | asignacion        
+    ;
+
+sentenciaInterior
+    : sentencia
     | retorno
-    | sentenciaBreak        // <— añadido
-    | sentenciaContinue     // <— añadido    
+    | sentenciaBreak
+    | sentenciaContinue
+    | sentenciaIf
     ;
 
 // Añadir las reglas para break y continue en el sintáctico
@@ -29,7 +33,7 @@ sentenciaIf
     ;
 
 bloque
-    : LA (sentencia)* LC
+    : LA (sentenciaInterior)* LC
     ;
 
 declaracionFuncion
