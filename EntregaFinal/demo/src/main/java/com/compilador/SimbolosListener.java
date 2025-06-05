@@ -102,8 +102,8 @@ public class SimbolosListener extends MiLenguajeBaseListener {
             // pero eso requeriría un análisis de flujo de control más complejo
             boolean tieneReturn = false;
             
-            for (int i = 0; i < ctx.bloque().sentencia().size(); i++) {
-                if (ctx.bloque().sentencia(i).retorno() != null) {
+            for (int i = 0; i < ctx.bloque().sentenciaInterior().size(); i++) {
+                if (ctx.bloque().sentenciaInterior(i).retorno() != null) {
                     tieneReturn = true;
                     break;
                 }
