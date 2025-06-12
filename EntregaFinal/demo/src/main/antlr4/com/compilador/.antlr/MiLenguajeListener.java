@@ -1,5 +1,4 @@
-// Generated from com\compilador\MiLenguaje.g4 by ANTLR 4.9.3
-package com.compilador;
+// Generated from c:/Users/Usuario/Desktop/2025/TC/Final/TCProyecto/EntregaFinal/demo/src/main/antlr4/com/compilador/MiLenguaje.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**

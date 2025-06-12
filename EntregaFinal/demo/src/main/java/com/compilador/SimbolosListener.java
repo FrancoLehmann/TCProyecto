@@ -2,6 +2,9 @@ package com.compilador;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
+
+import com.compilador.TablaSimbolos.Simbolo;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +16,13 @@ public class SimbolosListener extends MiLenguajeBaseListener {
     private TablaSimbolos tablaSimbolos;
     private List<String> errores;
     private String tipoRetornoActual; // Para verificar return
+    private List<String> warnings; // ← nueva lista
     
     public SimbolosListener() {
         this.tablaSimbolos = new TablaSimbolos();
         this.errores = new ArrayList<>();
         this.tipoRetornoActual = null;
+        this.warnings = new ArrayList<>();
     }
     
     /**
@@ -32,6 +37,11 @@ public class SimbolosListener extends MiLenguajeBaseListener {
      */
     public List<String> getErrores() {
         return errores;
+    }
+
+    // getters para exponer los warnings
+    public List<String> getWarnings() {
+        return warnings;
     }
     
     /**
@@ -163,6 +173,7 @@ public class SimbolosListener extends MiLenguajeBaseListener {
                       ": No se puede asignar valor a '" + nombre + "' porque no es una variable");
             return;
         }
+        simbolo.setUsada(true); // Marcar como usada
         
         // La verificación de tipos de la expresión se hará cuando implementemos type checking
     }
@@ -179,6 +190,8 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         if (simbolo == null) {
             errores.add("Error semántico en línea " + linea + 
                       ": Identificador '" + nombre + "' no declarado");
+        }else{
+            simbolo.setUsada(true); // Marcar como usado
         }
     }
     
@@ -280,5 +293,21 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         
         // Para otros tipos de expresiones, necesitarías reglas más complejas
         return "desconocido";
+    }
+
+    private void checkUnusedVariables() {
+        for (TablaSimbolos.Simbolo s : tablaSimbolos.getTodos()) {
+            if (s.getCategoria().equals("variable") && !s.isUsada()) {
+                warnings.add("⚠️ Warning semántico en línea " + s.getLinea()
+                + ": variable '" + s.getNombre() + "' declarada pero no usada");
+            }
+        }
+    }
+
+    @Override
+    public void exitPrograma(MiLenguajeParser.ProgramaContext ctx) {
+        super.exitPrograma(ctx);
+        // aquí llamas a todos tus métodos de validación de warnings:
+        checkUnusedVariables();
     }
 }

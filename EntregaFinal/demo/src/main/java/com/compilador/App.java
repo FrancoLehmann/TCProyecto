@@ -86,7 +86,7 @@ public class App {
 
             TablaSimbolos tabla = listener.getTablaSimbolos();
             tabla.imprimir();
-
+            // Mostrar errores semánticos
             List<String> erroresSemanticos = listener.getErrores();
             if (!erroresSemanticos.isEmpty()) {
                 System.out.println("\n=== ERRORES SEMÁNTICOS ===");
@@ -94,6 +94,15 @@ public class App {
             } else {
                 System.out.println("\n✅ Análisis semántico completado sin errores.");
             }
+            // Mostrar warnings semánticos
+            List<String> warningsSemanticos = listener.getWarnings();
+            if (!warningsSemanticos.isEmpty()) {
+                System.out.println("\n=== WARININGS SEMÁNTICOS ===");
+                warningsSemanticos.forEach(System.out::println);
+            } else {
+                System.out.println("\n✅ Análisis semántico completado sin warnings.");
+            }
+
 
         } catch (IOException e) {
             System.err.println("❌ Error al leer el archivo: " + e.getMessage());

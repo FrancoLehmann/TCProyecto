@@ -19,6 +19,7 @@ public class TablaSimbolos {
         private int columna;
         private String ambito;      // global o nombre_funcion
         private List<String> parametros;  // Solo para funciones (lista de tipos)
+        private boolean usada = false; // ← nuevo campo para validar uso
         
         public Simbolo(String nombre, String tipo, String categoria, int linea, int columna, String ambito) {
             this.nombre = nombre;
@@ -38,6 +39,16 @@ public class TablaSimbolos {
         public int getColumna() { return columna; }
         public String getAmbito() { return ambito; }
         public List<String> getParametros() { return parametros; }
+        
+        // Getters / setters para el tracking de uso
+        public boolean isUsada() {
+            return usada;
+        }
+
+        public void setUsada(boolean usada) {
+        this.usada = usada;
+        }
+
         
         // Agregar un parámetro a una función
         public void addParametro(String tipo) {
@@ -164,5 +175,9 @@ public class TablaSimbolos {
         for (Simbolo s : simbolos) {
             System.out.println(s);
         }
+    }
+
+    public List<Simbolo> getTodos() {
+        return simbolos;
     }
 }

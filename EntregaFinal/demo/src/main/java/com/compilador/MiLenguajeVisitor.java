@@ -23,6 +23,24 @@ public interface MiLenguajeVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSentencia(MiLenguajeParser.SentenciaContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link MiLenguajeParser#sentenciaInterior}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSentenciaInterior(MiLenguajeParser.SentenciaInteriorContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MiLenguajeParser#sentenciaBreak}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSentenciaBreak(MiLenguajeParser.SentenciaBreakContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MiLenguajeParser#sentenciaContinue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSentenciaContinue(MiLenguajeParser.SentenciaContinueContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link MiLenguajeParser#sentenciaIf}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -125,6 +143,13 @@ public interface MiLenguajeVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitExpVariable(MiLenguajeParser.ExpVariableContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code expCadena}
+	 * labeled alternative in {@link MiLenguajeParser#expresion}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpCadena(MiLenguajeParser.ExpCadenaContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code expFuncion}
 	 * labeled alternative in {@link MiLenguajeParser#expresion}.
