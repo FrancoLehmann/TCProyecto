@@ -311,7 +311,7 @@ public class SimbolosListener extends MiLenguajeBaseListener {
             // Solo funciones (no variables, parámetros u otros símbolos)
             if ("funcion".equals(s.getCategoria()) && !s.isUsada() && !s.getNombre().equals("main")) {
                 warnings.add(String.format(
-                    "⚠️ Warning semántico en línea %d: función '%s' declarada pero nunca invocada",
+                    "Warning semántico en línea %d: función '%s' declarada pero nunca invocada",
                     s.getLinea(), s.getNombre()
                 ));
             }
