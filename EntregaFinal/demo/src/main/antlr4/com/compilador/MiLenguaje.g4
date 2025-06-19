@@ -1,27 +1,32 @@
 grammar MiLenguaje;
 
+// =======================
+// Reglas del Parser
+// =======================
+
 programa
     : (sentencia)* EOF
     ;
 
-
 sentencia
     : declaracionFuncion
     | declaracionVariable
-    | asignacion        
+    | asignacion
     ;
 
+// Reglas para sentencias que pueden aparecer dentro de un bloque (funciones, bucles, etc.)
 sentenciaInterior
     : sentencia
     | retorno
     | sentenciaBreak
     | sentenciaContinue
     | sentenciaIf
+    | sentenciaWhile
+    | sentenciaFor
     ;
 
-// Añadir las reglas para break y continue en el sintáctico
 sentenciaBreak
-    : BREAK PYC            
+    : BREAK PYC
     ;
 
 sentenciaContinue
@@ -40,6 +45,14 @@ declaracionFuncion
     : tipo ID PA parametros? PC bloque
     ;
 
+sentenciaWhile
+    : WHILE PA expresion PC bloque
+    ;
+
+sentenciaFor
+    : FOR PA declaracionVariable? PYC expresion? PYC asignacion? PC bloque
+    ;
+
 parametros
     : parametro (COMA parametro)*
     ;
@@ -48,12 +61,15 @@ parametro
     : tipo ID
     ;
 
+// Declaración de variable con asignación opcional
 declaracionVariable
-    : tipo ID PYC
+    : tipo ID (IGUAL expresion)? PYC
     ;
 
 asignacion
-    : ID IGUAL expresion PYC
+    : ID IGUAL expresion PYC      // Asignación simple: x = expr;
+    | ID SUM SUM PYC              // Incremento: x++;
+    | ID RES RES PYC              // Decremento: x--;
     ;
 
 retorno
@@ -65,91 +81,108 @@ tipo
     | CHAR
     | DOUBLE
     | VOID
-    | STRING  
+    | STRING
     ;
 
+// -----------------------
+// Expresiones con precedencia
+// -----------------------
+// OR tiene la precedencia más baja, luego AND, luego comparaciones, luego suma/resta,
+// luego multiplicación/división/mod, luego unario (NOT), luego paréntesis, literales, variables y llamada a función.
 expresion
-    : expresion operadorBinario expresion     #expBinaria
+    : expresion OR expresion                  #expOr
+    | expresion AND expresion                 #expAnd
+    | expresion comparadorBinario expresion   #expComparacion
+    | expresion SUM expresion                 #expBinaria
+    | expresion RES expresion                 #expBinaria
+    | expresion MUL expresion                 #expBinaria
+    | expresion DIV expresion                 #expBinaria
+    | expresion MOD expresion                 #expBinaria
     | NOT expresion                           #expNegacion
     | PA expresion PC                         #expParentizada
+    | ID PA argumentos? PC                    #expFuncion
     | ID                                      #expVariable
     | INTEGER                                 #expEntero
     | DECIMAL                                 #expDecimal
     | CHARACTER                               #expCaracter
-    | STRING_LITERAL                          # expCadena    // <— añadido
-    | ID PA argumentos? PC                    #expFuncion
+    | STRING_LITERAL                          #expCadena
     ;
 
-operadorBinario
-    : SUM | RES | MUL | DIV | MOD
-    | MAYOR | MAYOR_IGUAL | MENOR | MENOR_IGUAL | EQL | DISTINTO
-    | AND | OR
-    ;
-    
+// Lista de argumentos en llamadas a función
 argumentos
     : expresion (COMA expresion)*
     ;
-PA   : '(' ;
-PC   : ')' ;
-CA   : '[' ;
-CC   : ']' ;
-LA   : '{' ;
-LC   : '}' ;
 
-PYC  : ';' ;
-COMA : ',' ;
+// Comparadores relacionales
+comparadorBinario
+    : MAYOR
+    | MAYOR_IGUAL
+    | MENOR
+    | MENOR_IGUAL
+    | EQL
+    | DISTINTO
+    ;
 
-IGUAL : '=' ;
+// =======================
+// Reglas del Lexer (Tokens)
+// =======================
 
-MAYOR  : '>' ;
+// Palabras clave (antes de ID)
+FOR       : 'for' ;
+WHILE     : 'while' ;
+IF        : 'if' ;
+ELSE      : 'else' ;
+INT       : 'int' ;
+CHAR      : 'char' ;
+DOUBLE    : 'double' ;
+VOID      : 'void' ;
+STRING    : 'String' ;
+RETURN    : 'return' ;
+BREAK     : 'break' ;
+CONTINUE  : 'continue' ;
+
+// Operadores y delimitadores
+PA        : '(' ;
+PC        : ')' ;
+CA        : '[' ;
+CC        : ']' ;
+LA        : '{' ;
+LC        : '}' ;
+PYC       : ';' ;
+COMA      : ',' ;
+IGUAL     : '=' ;
+MAYOR     : '>' ;
 MAYOR_IGUAL: '>=' ;
-MENOR  : '<' ;
+MENOR     : '<' ;
 MENOR_IGUAL: '<=' ;
-EQL  : '==' ;
+EQL       : '==' ;
 DISTINTO  : '!=' ;
+SUM       : '+' ;
+RES       : '-' ;
+MUL       : '*' ;
+DIV       : '/' ;
+MOD       : '%' ;
+OR        : '||' ;
+AND       : '&&' ;
+NOT       : '!'   ;
 
-SUM  : '+' ;
-RES  : '-' ;
-MUL  : '*' ;
-DIV  : '/' ;
-MOD  : '%' ;
-
-OR   : '||' ;
-AND  : '&&' ;
-NOT  : '!'  ;
-
-FOR   : 'for' ;
-WHILE : 'while' ;
-
-IF    : 'if' ;
-ELSE  : 'else' ;
-
-INT     : 'int' ;
-CHAR    : 'char' ;
-DOUBLE  : 'double' ;
-VOID    : 'void' ;
-
-// Nuevo tipo de dato
-STRING  : 'String' ;
-
-RETURN : 'return' ;
-
-ID : (LETRA | '_') (LETRA | DIGITO | '_')* ;
-INTEGER : DIGITO+ ;
-DECIMAL : INTEGER '.' INTEGER ;
+// Literales
+INTEGER   : DIGITO+ ;
+DECIMAL   : DIGITO+ '.' DIGITO+ ;
 CHARACTER : '\'' (~['\r\n] | '\\' .) '\'' ;
 STRING_LITERAL : '"' (~["\\\r\n] | '\\' .)* '"' ;
 
-// Control de bucle
-BREAK    : 'break' ;
-CONTINUE : 'continue' ;
+// Identificador (después de palabras clave)
+ID : (LETRA | '_') (LETRA | DIGITO | '_')* ;
 
+// Comentarios y espacios
 COMENTARIO_LINEA : '//' ~[\r\n]* -> skip ;
 COMENTARIO_BLOQUE : '/*' .*? '*/' -> skip ;
+WS : [ \r\n\t]+ -> skip ;
 
-WS : [ \r\n\t] -> skip ;
-
+// Captura de caracteres no reconocidos (útil en etapas iniciales; en producción es posible eliminarlo)
 OTRO : . ;
 
+// Fragmentos
 fragment LETRA : [A-Za-z] ;
 fragment DIGITO : [0-9] ;

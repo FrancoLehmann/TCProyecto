@@ -1,0 +1,17 @@
+void main() {
+    int a;
+    int b;
+    int c;
+    int res2;
+    int nuevaResta;
+    int div;
+    
+    a = 5;
+    b = 3;
+    c = 2;
+    int es1 = a + b;
+    nuevaResta = b - a - c;
+
+    div = a / 0;
+
+}

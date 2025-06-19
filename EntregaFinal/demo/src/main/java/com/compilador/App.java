@@ -6,7 +6,13 @@ import org.antlr.v4.runtime.tree.*;
 import org.antlr.v4.gui.TreeViewer;
 
 import javax.swing.*;
+
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.*;
 
 public class App {
@@ -17,6 +23,20 @@ public class App {
         }
 
         try {
+
+            // Obtener el nombre del archivo de entrada para generar nombres de salida
+            String inputFilePath = args[0];
+            String inputFileName = new File(inputFilePath).getName();
+            String baseName = inputFileName.substring(0, inputFileName.lastIndexOf('.'));
+            
+            // Verificar que el archivo existe
+            File inputFile = new File(inputFilePath);
+            if (!inputFile.exists()) {
+                System.err.println(" Error: El archivo '" + inputFilePath + "' no existe.");
+                System.exit(1);
+            }            
+            
+
             // 1. ANÁLISIS LÉXICO
             System.out.println("Analizando archivo: " + args[0]);
             CharStream input = CharStreams.fromFileName(args[0]);
@@ -47,7 +67,7 @@ public class App {
                                 tokenName, token.getText(), token.getLine(), token.getCharPositionInLine());
                     }
                 }
-                System.out.println("\n✅ Análisis léxico completado sin errores.");
+                System.out.println("\n Análisis léxico completado sin errores.");
             } else {
                 erroresLexicos.forEach(System.out::println);
                 return;
@@ -71,7 +91,7 @@ public class App {
                 erroresSintacticos.forEach(System.out::println);
                 return;
             } else {
-                System.out.println("✅ Análisis sintáctico completado sin errores.");
+                System.out.println(" Análisis sintáctico completado sin errores.");
                 System.out.println("Representación textual del árbol sintáctico:");
                 System.out.println(tree.toStringTree(parser));
             }
@@ -92,7 +112,7 @@ public class App {
                 System.out.println("\n=== ERRORES SEMÁNTICOS ===");
                 erroresSemanticos.forEach(System.out::println);
             } else {
-                System.out.println("\n✅ Análisis semántico completado sin errores.");
+                System.out.println("\n Análisis semántico completado sin errores.");
             }
             // Mostrar warnings semánticos
             List<String> warningsSemanticos = listener.getWarnings();
@@ -100,8 +120,37 @@ public class App {
                 System.out.println("\n=== WARININGS SEMÁNTICOS ===");
                 warningsSemanticos.forEach(System.out::println);
             } else {
-                System.out.println("\n✅ Análisis semántico completado sin warnings.");
+                System.out.println("\n Análisis semántico completado sin warnings.");
             }
+            // 5. GENERACIÓN DE CÓDIGO INTERMEDIO
+            // 5. GENERACIÓN DE CÓDIGO INTERMEDIO
+            System.out.println("\n=== 5. GENERACIÓN DE CÓDIGO INTERMEDIO ===");
+            System.out.println("Iniciando recorrido del AST con CodigoVisitor...");
+            
+            // Crear el visitor con la tabla de símbolos
+            CodigoVisitor visitor = new CodigoVisitor(tabla);
+            
+            // ¡AQUÍ! - Recorrer el AST para generar código intermedio
+            visitor.visit(tree);
+            
+            // Obtener el generador con el código generado
+            GeneradorCodigo generador = visitor.getGenerador();
+            
+            // Mostrar el código generado en consola
+            System.out.println("Código de tres direcciones generado:");
+            generador.imprimirCodigo();
+            
+            // Mostrar información adicional
+            if (generador.getTiposVariables() != null) {
+                generador.imprimirTipos();
+            }
+            generador.imprimirEstadisticas();
+            
+            // Guardar código intermedio en archivo
+            String codigoIntermedioPath = baseName + "_codigo_intermedio.txt";
+            guardarCodigoEnArchivo(generador.getCodigo(), codigoIntermedioPath);
+            System.out.println("Código intermedio guardado en: " + codigoIntermedioPath);
+                       
 
 
         } catch (IOException e) {
@@ -114,6 +163,39 @@ public class App {
         }
     }
 
+        /**
+     * Cuenta la cantidad de símbolos en la tabla
+     */
+    private static int contarSimbolos(TablaSimbolos tabla) {
+        // Implementación simple - en la tabla real deberías tener un método size()
+        return 0; // Por ahora retorna 0, implementa según tu TablaSimbolos
+    }
+
+    /**
+     * Guarda una lista de líneas de código en un archivo de texto
+     */
+    private static void guardarCodigoEnArchivo(List<String> codigo, String rutaArchivo) throws IOException {
+        Path filePath = Paths.get(rutaArchivo);
+        try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
+            writer.write("// Código de tres direcciones generado automáticamente");
+            writer.newLine();
+            writer.write("// Archivo: " + rutaArchivo);
+            writer.newLine();
+            writer.write("// Total de instrucciones: " + codigo.size());
+            writer.newLine();
+            writer.newLine();
+            
+            for (int i = 0; i < codigo.size(); i++) {
+                writer.write(String.format("%3d: %s", i, codigo.get(i)));
+                writer.newLine();
+            }
+        }
+        System.out.println("Archivo guardado con " + codigo.size() + " instrucciones");
+    }
+
+    /**
+     * Genera y muestra el árbol sintáctico visualmente
+     */
     private static void generarImagenArbolSintactico(ParseTree tree, Parser parser) {
         try {
             JFrame frame = new JFrame("Árbol Sintáctico");
@@ -138,4 +220,6 @@ public class App {
             System.err.println("❌ Error al mostrar árbol sintáctico: " + e.getMessage());
         }
     }
+
+
 }

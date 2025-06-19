@@ -228,6 +228,8 @@ public class SimbolosListener extends MiLenguajeBaseListener {
                       " argumentos, pero recibió " + numArgumentosRecibidos);
         }
         
+        simbolo.setUsada(true); // Marcar como usada
+
         // Para una verificación completa de tipos, necesitaríamos determinar el tipo de cada expresión
     }
     
@@ -304,10 +306,23 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         }
     }
 
+    private void checkNoFunctionUsage() {
+        for (TablaSimbolos.Simbolo s : tablaSimbolos.getTodos()) {
+            // Solo funciones (no variables, parámetros u otros símbolos)
+            if ("funcion".equals(s.getCategoria()) && !s.isUsada() && !s.getNombre().equals("main")) {
+                warnings.add(String.format(
+                    "⚠️ Warning semántico en línea %d: función '%s' declarada pero nunca invocada",
+                    s.getLinea(), s.getNombre()
+                ));
+            }
+        }
+    }
+
     @Override
     public void exitPrograma(MiLenguajeParser.ProgramaContext ctx) {
         super.exitPrograma(ctx);
         // aquí llamas a todos tus métodos de validación de warnings:
         checkUnusedVariables();
+        checkNoFunctionUsage();
     }
 }
