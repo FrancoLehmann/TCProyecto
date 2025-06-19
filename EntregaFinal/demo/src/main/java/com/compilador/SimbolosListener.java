@@ -321,5 +321,6 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         super.exitPrograma(ctx);
         // aquí llamas a todos tus métodos de validación de warnings:
         checkUnusedVariables();
+        checkNoFunctionUsage();
     }
 }
