@@ -1,7 +1,13 @@
+int suma( int a, int b, int d){
+    int c = a + b;
+    return c;
+}
+
 void main() {
     int a;
     int b;
     int c;
+    int d;
     int res2;
     int nuevaResta;
     int div;
@@ -9,9 +15,9 @@ void main() {
     a = 5;
     b = 3;
     c = 2;
+    d = 0;
     int es1 = a + b;
     nuevaResta = b - a - c;
 
-    div = a / 0;
-
+    div = a / d;
 }

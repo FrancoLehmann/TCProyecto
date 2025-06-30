@@ -150,6 +150,22 @@ public class SimbolosListener extends MiLenguajeBaseListener {
                       ": Variable '" + nombre + "' ya declarada en este ámbito");
         }
     }
+
+    @Override
+    public void exitDeclaracionVariable(MiLenguajeParser.DeclaracionVariableContext ctx) {
+        String nombre = ctx.ID().getText();
+        TablaSimbolos.Simbolo simbolo = tablaSimbolos.buscar(nombre);
+        if (simbolo == null) {
+            // (seguro ya manejas este error en otra parte)
+            return;
+        }
+        // ¡Este es el punto clave! Si traes initializer, ctx.expresion() != null:
+        if (ctx.expresion() != null) {
+            // Marcamos la variable como inicializada y usada
+            simbolo.setInicializada(true);        
+        }
+        // (luego tu lógica normal de declaración, si la tienes)
+    }
     
     /**
      * Cuando se encuentra una asignación
@@ -174,6 +190,10 @@ public class SimbolosListener extends MiLenguajeBaseListener {
             return;
         }
         simbolo.setUsada(true); // Marcar como usada
+        if (simbolo.getCategoria().equals("variable")) {
+            // Si hay condiciones, asumimos que la variable se inicializa aquí
+            simbolo.setInicializada(true);            
+        }
         
         // La verificación de tipos de la expresión se hará cuando implementemos type checking
     }
@@ -192,6 +212,7 @@ public class SimbolosListener extends MiLenguajeBaseListener {
                       ": Identificador '" + nombre + "' no declarado");
         }else{
             simbolo.setUsada(true); // Marcar como usado
+            simbolo.setInicializada(true); // Marcar como inicializada si se usa en una expresión
         }
     }
     
@@ -300,7 +321,7 @@ public class SimbolosListener extends MiLenguajeBaseListener {
     private void checkUnusedVariables() {
         for (TablaSimbolos.Simbolo s : tablaSimbolos.getTodos()) {
             if (s.getCategoria().equals("variable") && !s.isUsada()) {
-                warnings.add("⚠️ Warning semántico en línea " + s.getLinea()
+                warnings.add("Warning semántico en línea " + s.getLinea()
                 + ": variable '" + s.getNombre() + "' declarada pero no usada");
             }
         }
@@ -317,6 +338,31 @@ public class SimbolosListener extends MiLenguajeBaseListener {
             }
         }
     }
+    
+    private void checkUninitializedVariables() {
+        for (TablaSimbolos.Simbolo s : tablaSimbolos.getTodos()) {
+            // Solo variables (no funciones, parámetros u otros símbolos)
+            if ("variable".equals(s.getCategoria()) && !s.isInicializada() && s.isUsada()) {
+                warnings.add(String.format(
+                    "⚠️ Warning semántico en línea %d: variable '%s' declarada pero no inicializada antes de su uso",
+                    s.getLinea(), s.getNombre()
+                ));
+            }
+        }
+    }
+
+    private void checkUnusedParameters() {
+        for (TablaSimbolos.Simbolo s : tablaSimbolos.getTodos()) {
+            // Solo parámetros (no variables locales ni funciones)
+            if ("parametro".equals(s.getCategoria()) && !s.isUsada()) {
+                warnings.add(String.format(
+                    "⚠️ Warning semántico en línea %d: parámetro '%s' de la función '%s' no utilizado",
+                    s.getLinea(), s.getNombre(), s.getAmbito()
+                ));
+            }
+        }
+    }
+
 
     @Override
     public void exitPrograma(MiLenguajeParser.ProgramaContext ctx) {
@@ -324,5 +370,7 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         // aquí llamas a todos tus métodos de validación de warnings:
         checkUnusedVariables();
         checkNoFunctionUsage();
+        checkUninitializedVariables();
+        checkUnusedParameters();
     }
 }

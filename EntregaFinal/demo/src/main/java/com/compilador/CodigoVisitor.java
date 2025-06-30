@@ -63,8 +63,9 @@ public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
                     System.err.println(" COMPILACIÓN: División por cero detectada: " + right + " / 0");
                 }
             } else {
-                System.out.println(" VISITOR: Generando chequeo de división por cero en tiempo de ejecución para " + left);
-                generador.genCheckDivision(left);
+                System.out.println(" es una expresión, chequeo de división por cero en tiempo de ejecución");
+                System.out.println(" VISITOR: Generando chequeo de división por cero en tiempo de ejecución para " + right);
+                generador.genCheckDivision(right);
             }
         }
 

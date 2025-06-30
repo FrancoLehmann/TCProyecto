@@ -114,35 +114,56 @@ public class GeneradorCodigo {
      * Genera chequeo de división por cero en tiempo de ejecución
      */
     public void genCheckDivision(String divisor) {
-        System.out.println(" GENERADOR: Generando chequeo de división por cero para " + divisor);
-        // Crear temporales y etiquetas para el chequeo
-        String tempCheck = newTemp();
-        String labelOk = newLabel();
-        String labelError = newLabel();
+        // 1) Precondiciones mínimas
+        if (divisor == null || divisor.isEmpty()) {
+            throw new IllegalArgumentException(
+                "genCheckDivision: parámetro 'divisor' inválido: '" + divisor + "'"
+            );
+        }
+        if (codigo == null) {
+            throw new IllegalStateException(
+                "genCheckDivision: la lista de instrucciones 'codigo' no está inicializada"
+            );
+        }
 
-        // Suponiendo sintaxis simple: tempCheck = divisor == 0
+        // 2) Logging para depuración
+        System.out.println("GENERADOR: chequeo división por cero para '" + divisor + "'");
+
+        // 3) Generar temporales y etiquetas
+        String tempCheck = newTemp();       // p.ej. t1
+        String labelError = newLabel();     // p.ej. L1
+        String labelOk    = newLabel();     // p.ej. L2
+        // Asegurarnos de que no coincidan
+        if (labelError.equals(labelOk)) {
+            throw new IllegalStateException(
+            "genCheckDivision: etiquetas duplicadas '" + labelOk + "'"
+            );
+        }
+
+        // 4) Instrucción de comparación: tempCheck = (divisor == 0)
         String instruCheck = tempCheck + " = " + divisor + " == 0";
         codigo.add(instruCheck);
-        System.out.println(" GENERADOR: Generé -> " + instruCheck);
+        System.out.println("GENERADOR: " + instruCheck);
 
-        // Si es cero, saltar a labelError
+        // 5) Si es cero, saltar a manejo de error
         String instruIf = "if " + tempCheck + " goto " + labelError;
         codigo.add(instruIf);
-        System.out.println(" GENERADOR: Generé -> " + instruIf);
+        System.out.println("GENERADOR: " + instruIf);
 
-        // Continuar si no es cero
+        // 6) Si no, continuar
         String instruGotoOk = "goto " + labelOk;
         codigo.add(instruGotoOk);
-        System.out.println(" GENERADOR: Generé -> " + instruGotoOk);
+        System.out.println("GENERADOR: " + instruGotoOk);
 
-        // Manejo de error: etiqueta de error
+        // 7) Bloque de error
         codigo.add(labelError + ":");
-        codigo.add("// ERROR: División por cero en tiempo de ejecución");
-        codigo.add("throw new RuntimeException(\"Error: División por cero\");");
+        codigo.add("    // ERROR: División por cero en tiempo de ejecución");
+        codigo.add("    throw new RuntimeException(\"Error: División por cero\");");
 
-        // Etiqueta ok para continuar
+        // 8) Etiqueta de continuación
         codigo.add(labelOk + ":");
     }
+
 
     /**
      * Obtiene el código generado

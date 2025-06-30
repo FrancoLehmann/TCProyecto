@@ -117,7 +117,7 @@ public class App {
             // Mostrar warnings semánticos
             List<String> warningsSemanticos = listener.getWarnings();
             if (!warningsSemanticos.isEmpty()) {
-                System.out.println("\n=== WARININGS SEMÁNTICOS ===");
+                System.out.println("\n=== WARNINGS SEMÁNTICOS ===");
                 warningsSemanticos.forEach(System.out::println);
             } else {
                 System.out.println("\n Análisis semántico completado sin warnings.");

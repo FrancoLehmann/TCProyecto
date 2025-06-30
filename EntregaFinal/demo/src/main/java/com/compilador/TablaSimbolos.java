@@ -20,6 +20,7 @@ public class TablaSimbolos {
         private String ambito;      // global o nombre_funcion
         private List<String> parametros;  // Solo para funciones (lista de tipos)
         private boolean usada = false; // ← nuevo campo para validar uso
+        private boolean inicializada = false; // ← nuevo campo para validar inicialización
         
         public Simbolo(String nombre, String tipo, String categoria, int linea, int columna, String ambito) {
             this.nombre = nombre;
@@ -49,6 +50,13 @@ public class TablaSimbolos {
         this.usada = usada;
         }
 
+        // Getters / setters para el tracking de inicialización
+        public boolean isInicializada() {
+            return inicializada;
+        }
+        public void setInicializada(boolean inicializada) {
+            this.inicializada = inicializada;
+        }
         
         // Agregar un parámetro a una función
         public void addParametro(String tipo) {
