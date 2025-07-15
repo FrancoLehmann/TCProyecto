@@ -150,7 +150,17 @@ public class App {
             String codigoIntermedioPath = baseName + "_codigo_intermedio.txt";
             guardarCodigoEnArchivo(generador.getCodigo(), codigoIntermedioPath);
             System.out.println("Código intermedio guardado en: " + codigoIntermedioPath);
-                       
+            
+            // === 6. OPTIMIZACIÓN DE CÓDIGO ===
+            Optimizador optimizador = new Optimizador(generador.getCodigo());
+            List<String> codigoOptimizado = optimizador.optimizar();
+
+            String codigoOptimizadoPath = baseName + "_codigo_optimizado.txt";
+            guardarCodigoEnArchivo(codigoOptimizado, codigoOptimizadoPath);
+            System.out.println( "Código optimizado guardado en: " + codigoOptimizadoPath);
+
+            // (Opcional) Imprimir en consola el código optimizado
+            optimizador.imprimirCodigoOptimizado();
 
 
         } catch (IOException e) {
