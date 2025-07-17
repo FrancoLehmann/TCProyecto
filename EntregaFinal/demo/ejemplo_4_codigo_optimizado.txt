@@ -1,7 +1,14 @@
 // Código de tres direcciones generado automáticamente
 // Archivo: ejemplo_4_codigo_optimizado.txt
-// Total de instrucciones: 3
+// Total de instrucciones: 10
 
   0: a = alloc 3
   1: t1 = 0
-  2: store 10 into a[t1]
+  2: t2 = 10
+  3: store t2 into a[t1]
+  4: t4 = 1
+  5: t5 = 20
+  6: store t5 into a[t4]
+  7: t7 = 1
+  8: t8 = load a[t7]
+  9: uno = t8

@@ -23,6 +23,11 @@ public class App {
         }
 
         try {
+            // Colores y mostrar en consola
+            String green  = "\u001B[32m";
+            String yellow = "\u001B[33m";
+            String red    = "\u001B[31m";
+            String reset  = "\u001B[0m";
 
             // Obtener el nombre del archivo de entrada para generar nombres de salida
             String inputFilePath = args[0];
@@ -32,7 +37,7 @@ public class App {
             // Verificar que el archivo existe
             File inputFile = new File(inputFilePath);
             if (!inputFile.exists()) {
-                System.err.println(" Error: El archivo '" + inputFilePath + "' no existe.");
+                System.err.println(red + " Error: El archivo '" + inputFilePath + "' no existe." + reset);
                 System.exit(1);
             }            
             
@@ -48,7 +53,7 @@ public class App {
                 @Override
                 public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, 
                                         int line, int charPositionInLine, String msg, RecognitionException e) {
-                    erroresLexicos.add("ERROR LÉXICO en línea " + line + ":" + charPositionInLine + " - " + msg);
+                    erroresLexicos.add( red +"ERROR LÉXICO en línea " + line + ":" + charPositionInLine + " - " + msg + reset);
                     throw new ParseCancellationException(msg);
                 }
             });
@@ -67,7 +72,7 @@ public class App {
                                 tokenName, token.getText(), token.getLine(), token.getCharPositionInLine());
                     }
                 }
-                System.out.println("\n Análisis léxico completado sin errores.");
+                System.out.println(green + "\n Análisis léxico completado sin errores." + reset);
             } else {
                 erroresLexicos.forEach(System.out::println);
                 return;
@@ -81,7 +86,7 @@ public class App {
                 @Override
                 public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, 
                                         int line, int charPositionInLine, String msg, RecognitionException e) {
-                    erroresSintacticos.add("ERROR SINTÁCTICO en línea " + line + ":" + charPositionInLine + " - " + msg);
+                    erroresSintacticos.add(red + "ERROR SINTÁCTICO en línea " + line + ":" + charPositionInLine + " - " + msg + reset);
                 }
             });
 
@@ -91,7 +96,7 @@ public class App {
                 erroresSintacticos.forEach(System.out::println);
                 return;
             } else {
-                System.out.println(" Análisis sintáctico completado sin errores.");
+                System.out.println(green + " Análisis sintáctico completado sin errores." + reset);
                 System.out.println("Representación textual del árbol sintáctico:");
                 System.out.println(tree.toStringTree(parser));
             }
@@ -106,11 +111,7 @@ public class App {
 
             TablaSimbolos tabla = listener.getTablaSimbolos();
             tabla.imprimir();
-            // Colores y mostrar en consola
-            String green  = "\u001B[32m";
-            String yellow = "\u001B[33m";
-            String red    = "\u001B[31m";
-            String reset  = "\u001B[0m";
+
             // Mostrar errores semánticos
             List<String> erroresSemanticos = listener.getErrores();
             if (!erroresSemanticos.isEmpty()) {
@@ -142,7 +143,7 @@ public class App {
             GeneradorCodigo generador = visitor.getGenerador();
             
             // Mostrar el código generado en consola
-            System.out.println("Código de tres direcciones generado:");
+            System.out.println(green +"Código de tres direcciones generado:" + reset);
             generador.imprimirCodigo();
             
             // Mostrar información adicional
@@ -162,6 +163,7 @@ public class App {
 
             String codigoOptimizadoPath = baseName + "_codigo_optimizado.txt";
             guardarCodigoEnArchivo(codigoOptimizado, codigoOptimizadoPath);
+            System.out.println(green +"Código optimizado generado:" + reset);
             System.out.println( "Código optimizado guardado en: " + codigoOptimizadoPath);
 
             // (Opcional) Imprimir en consola el código optimizado
@@ -212,7 +214,10 @@ public class App {
      * Genera y muestra el árbol sintáctico visualmente
      */
     private static void generarImagenArbolSintactico(ParseTree tree, Parser parser) {
+        String red    = "\u001B[31m";
+        String reset  = "\u001B[0m";
         try {
+
             JFrame frame = new JFrame("Árbol Sintáctico");
             JPanel panel = new JPanel();
 
@@ -232,7 +237,7 @@ public class App {
             viewer.open();  // Esto lanza una ventana gráfica con el árbol de análisis
 
         } catch (Exception e) {
-            System.err.println("❌ Error al mostrar árbol sintáctico: " + e.getMessage());
+            System.err.println(red + " Error al mostrar árbol sintáctico: " + e.getMessage() + reset);
         }
     }
 

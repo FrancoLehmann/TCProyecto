@@ -1,6 +1,6 @@
 // Código de tres direcciones generado automáticamente
 // Archivo: ejemplo_4_codigo_intermedio.txt
-// Total de instrucciones: 9
+// Total de instrucciones: 13
 
   0: a = alloc 3
   1: t0 = 0
@@ -9,5 +9,9 @@
   4: store t2 into a[t1]
   5: t3 = 1
   6: t4 = t3 * 1
-  7: t5 = load a[t4]
-  8: x = t5
+  7: t5 = 20
+  8: store t5 into a[t4]
+  9: t6 = 1
+ 10: t7 = t6 * 1
+ 11: t8 = load a[t7]
+ 12: uno = t8

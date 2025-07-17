@@ -67,7 +67,7 @@ declaracionVariable
     ;
 
 asignacion
-    : ( ID | ID CA expresion CC ) IGUAL expresion PYC      // Asignación simple: x = expr;
+    :  ( ID | ID CA expresion CC ) IGUAL expresion PYC      // Asignación simple: x = expr;
     | ID SUM SUM PYC              // Incremento: x++;
     | ID RES RES PYC              // Decremento: x--;
     ;
