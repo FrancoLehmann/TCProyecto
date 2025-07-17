@@ -1,0 +1,29 @@
+// Test file for arrays and bool
+int contadorGlobal;
+double valorPi;
+char inicial;
+bool activo;
+
+int sumar(int a, int b) {
+    int resultado;
+    resultado = a + b;
+    return resultado;
+}
+
+void main() {
+    int estado;
+    int temp;
+    int numeros[3];
+    
+    contadorGlobal = 0;
+    valorPi = 3.14;
+    inicial = 'M';
+    activo = true;
+    
+    numeros[0] = 10;
+    numeros[1] = 20;
+    numeros[2] = 30;
+    
+    temp = numeros[0] + numeros[1];
+    estado = sumar(temp, 5);
+}

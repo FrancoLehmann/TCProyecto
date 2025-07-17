@@ -150,6 +150,19 @@ public class App {
             String codigoIntermedioPath = baseName + "_codigo_intermedio.txt";
             guardarCodigoEnArchivo(generador.getCodigo(), codigoIntermedioPath);
             System.out.println("Código intermedio guardado en: " + codigoIntermedioPath);
+            
+            // 6. OPTIMIZACIÓN DE CÓDIGO
+            System.out.println("\n=== 6. OPTIMIZACIÓN DE CÓDIGO ===");
+            OptimizadorCodigo optimizador = new OptimizadorCodigo(generador.getCodigo());
+            List<String> codigoOptimizado = optimizador.optimizar();
+            
+            // Mostrar comparación
+            optimizador.imprimirComparacion();
+            
+            // Guardar código optimizado en archivo
+            String codigoOptimizadoPath = baseName + "_codigo_optimizado.txt";
+            guardarCodigoEnArchivo(codigoOptimizado, codigoOptimizadoPath);
+            System.out.println("\nCódigo optimizado guardado en: " + codigoOptimizadoPath);
                        
 
 
@@ -176,13 +189,23 @@ public class App {
      */
     private static void guardarCodigoEnArchivo(List<String> codigo, String rutaArchivo) throws IOException {
         Path filePath = Paths.get(rutaArchivo);
+        boolean esOptimizado = rutaArchivo.contains("optimizado");
+        
         try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
-            writer.write("// Código de tres direcciones generado automáticamente");
+            if (esOptimizado) {
+                writer.write("// Código de tres direcciones OPTIMIZADO");
+            } else {
+                writer.write("// Código de tres direcciones generado automáticamente");
+            }
             writer.newLine();
             writer.write("// Archivo: " + rutaArchivo);
             writer.newLine();
             writer.write("// Total de instrucciones: " + codigo.size());
             writer.newLine();
+            if (esOptimizado) {
+                writer.write("// Optimizaciones aplicadas: constant folding, constant propagation, dead code elimination, algebraic simplification");
+                writer.newLine();
+            }
             writer.newLine();
             
             for (int i = 0; i < codigo.size(); i++) {

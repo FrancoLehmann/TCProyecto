@@ -1,0 +1,24 @@
+// Test file for optimization
+int calcular(int x, int y) {
+    int a;
+    int b;
+    int c;
+    int unused;
+    
+    a = 5 + 3;          // Constant folding: a = 8
+    b = a * 1;          // Algebraic simplification: b = a
+    c = b + 0;          // Algebraic simplification: c = b
+    unused = 10 * 0;    // Dead code + algebraic: unused = 0 (and may be eliminated)
+    
+    return c;
+}
+
+void main() {
+    int resultado;
+    int temp1;
+    int temp2;
+    
+    temp1 = 10 + 5;     // Constant folding: temp1 = 15
+    temp2 = temp1 - 0;  // Algebraic simplification: temp2 = temp1
+    resultado = calcular(temp2, 20);
+}
