@@ -199,4 +199,24 @@ public class GeneradorCodigo {
         System.out.println("   - Etiquetas creadas: " + labelCounter);
         System.out.println("   - Instrucciones totales: " + codigo.size());
     }
+
+    /** Genera código t = left * right */
+    public void genMul(String target, String left, String right) {
+        codigo.add(String.format("%s = %s * %s", target, left, right));
+    }
+    
+    // Reserva 'n' celdas contiguas para el arreglo
+    public void genAlloc(String arrayName, int size) {
+        codigo.add(String.format("%s = alloc %d", arrayName, size));
+    }
+
+    // Cargar desde dirección base+offset en un temporal
+    public void genLoad(String targetTemp, String base, String offsetTemp) {
+        codigo.add(String.format("%s = load %s[%s]", targetTemp, base, offsetTemp));
+    }
+
+    // Guardar un valor en base+offset
+    public void genStore(String valueTemp, String base, String offsetTemp) {
+        codigo.add(String.format("store %s into %s[%s]", valueTemp, base, offsetTemp));
+    }
 }

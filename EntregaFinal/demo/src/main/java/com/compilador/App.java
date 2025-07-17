@@ -106,21 +106,26 @@ public class App {
 
             TablaSimbolos tabla = listener.getTablaSimbolos();
             tabla.imprimir();
+            // Colores y mostrar en consola
+            String green  = "\u001B[32m";
+            String yellow = "\u001B[33m";
+            String red    = "\u001B[31m";
+            String reset  = "\u001B[0m";
             // Mostrar errores semánticos
             List<String> erroresSemanticos = listener.getErrores();
             if (!erroresSemanticos.isEmpty()) {
-                System.out.println("\n=== ERRORES SEMÁNTICOS ===");
+                System.out.println(red + "\n=== ERRORES SEMÁNTICOS ===" + reset);
                 erroresSemanticos.forEach(System.out::println);
             } else {
-                System.out.println("\n Análisis semántico completado sin errores.");
+                System.out.println( green + "\n Análisis semántico completado sin errores." + reset);
             }
             // Mostrar warnings semánticos
             List<String> warningsSemanticos = listener.getWarnings();
             if (!warningsSemanticos.isEmpty()) {
-                System.out.println("\n=== WARNINGS SEMÁNTICOS ===");
+                System.out.println(yellow + "\n=== WARNINGS SEMÁNTICOS ===" + reset);
                 warningsSemanticos.forEach(System.out::println);
             } else {
-                System.out.println("\n Análisis semántico completado sin warnings.");
+                System.out.println(green+ "\n Análisis semántico completado sin warnings." + reset);
             }
             // 5. GENERACIÓN DE CÓDIGO INTERMEDIO
             // 5. GENERACIÓN DE CÓDIGO INTERMEDIO
@@ -164,11 +169,11 @@ public class App {
 
 
         } catch (IOException e) {
-            System.err.println("❌ Error al leer el archivo: " + e.getMessage());
+            System.err.println(" Error al leer el archivo: " + e.getMessage());
         } catch (ParseCancellationException e) {
-            System.err.println("❌ Error de análisis: " + e.getMessage());
+            System.err.println(" Error de análisis: " + e.getMessage());
         } catch (Exception e) {
-            System.err.println("❌ Error inesperado:");
+            System.err.println(" Error inesperado:");
             e.printStackTrace();
         }
     }

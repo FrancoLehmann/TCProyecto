@@ -30,30 +30,58 @@ public class Optimizador {
      * Elimina código muerto (código inalcanzable)
      */
     public void eliminarCodigoMuerto() {
-        Set<Integer> lineasAlcanzables = new HashSet<>();
-        Map<String, Integer> etiquetas = new HashMap<>();
-        // Identificar etiquetas
+        Set<Integer> reach = new HashSet<>();
+        Map<String,Integer> labels = new HashMap<>();
+        // 1) Mapea etiquetas
         for (int i = 0; i < codigo.size(); i++) {
-            String linea = codigo.get(i);
-            if (linea.endsWith(":")) {
-                String etiqueta = linea.substring(0, linea.length() - 1);
-                etiquetas.put(etiqueta, i);
+            String l = codigo.get(i).trim();
+            if (l.endsWith(":")) {
+                labels.put(l.substring(0, l.length()-1), i);
             }
         }
-        // Marcar desde inicio y desde func_main
-        marcarLineasAlcanzables(0, lineasAlcanzables, etiquetas);
-        if (etiquetas.containsKey("func_main")) {
-            marcarLineasAlcanzables(etiquetas.get("func_main"), lineasAlcanzables, etiquetas);
-        }
-        // Filtrar
-        List<String> codigoOpt = new ArrayList<>();
+        // 2) Comienza DFS desde la primera instrucción
+        dfsReach(0, reach, labels);
+        // 3) Reconstruye solo con las que quedaron reachables
+        List<String> kept = new ArrayList<>();
         for (int i = 0; i < codigo.size(); i++) {
-            if (lineasAlcanzables.contains(i)) {
-                codigoOpt.add(codigo.get(i));
-            }
+            if (reach.contains(i)) kept.add(codigo.get(i));
         }
-        codigo = codigoOpt;
+        codigo = kept;
     }
+
+    private void dfsReach(int ip, Set<Integer> reach, Map<String,Integer> labels) {
+        if (ip < 0 || ip >= codigo.size() || reach.contains(ip)) return;
+        reach.add(ip);
+        String instr = codigo.get(ip).trim();
+
+        if (instr.startsWith("goto ")) {
+            String lbl = instr.substring(5).trim();
+            if (labels.containsKey(lbl)) {
+                dfsReach(labels.get(lbl), reach, labels);
+            }
+            // no caemos al siguiente
+            return;
+        }
+
+        if (instr.startsWith("if ") && instr.contains(" goto ")) {
+            String lbl = instr.split(" goto ")[1].trim();
+            // ambas rutas: salto y caída
+            if (labels.containsKey(lbl)) {
+                dfsReach(labels.get(lbl), reach, labels);
+            }
+            dfsReach(ip + 1, reach, labels);
+            return;
+        }
+
+        if (instr.startsWith("return")) {
+            // no caemos al siguiente
+            return;
+        }
+
+        // caso normal: siguiente instrucción
+        dfsReach(ip + 1, reach, labels);
+    }
+
 
     private void marcarLineasAlcanzables(int linea, Set<Integer> visitadas, Map<String, Integer> etiquetas) {
         if (linea >= codigo.size() || visitadas.contains(linea)) return;
@@ -85,30 +113,46 @@ public class Optimizador {
     public void propagarConstantes() {
         Map<String, String> constantValues = new HashMap<>();
         List<String> codigoOpt = new ArrayList<>();
+
         for (String linea : codigo) {
+            // 1) Solo procesamos asignaciones a temporales tN
             if (linea.contains(" = ") && !linea.matches(".*call.*")) {
                 String[] partes = linea.split("=", 2);
-                String dest = partes[0].trim();
-                String val = partes[1].replace(";", "").trim();
-                if (val.matches("-?\\d+")) {
+                String dest = partes[0].trim();                   // lado izquierdo
+                String rhs  = partes[1].replace(";", "").trim();  // lado derecho
+
+                // a) Si es “tN = LITERAL_NUMÉRICO”, registramos la constante
+                if (dest.matches("t\\d+") && rhs.matches("-?\\d+")) {
+                    constantValues.put(dest, rhs);
+                    codigoOpt.add(dest + " = " + rhs);
+                    continue;
+                }
+                // b) Si es “tM = tN” y tN estaba en constantValues, propagamos
+                if (dest.matches("t\\d+") && constantValues.containsKey(rhs)) {
+                    String val = constantValues.get(rhs);
                     constantValues.put(dest, val);
                     codigoOpt.add(dest + " = " + val);
                     continue;
                 }
-                if (constantValues.containsKey(val)) {
-                    constantValues.put(dest, constantValues.get(val));
-                    codigoOpt.add(dest + " = " + constantValues.get(val));
-                    continue;
-                }
             }
+
+            // 2) Para TODAS las demás líneas, NUNCA cambiamos el dest (que puede ser variable de usuario).
+            //    Solo, opcionalmente, podemos propagar dentro de temporales en RHS:
             String tmp = linea;
-            for (Map.Entry<String, String> e : constantValues.entrySet()) {
-                tmp = tmp.replaceAll("\\b" + e.getKey() + "\\b", e.getValue());
+            // Si la línea escribe en un temporal, permitir propagar en su RHS
+            if (tmp.matches("^t\\d+\\s*=.*")) {
+                for (Map.Entry<String, String> e : constantValues.entrySet()) {
+                    tmp = tmp.replaceAll("\\b" + e.getKey() + "\\b", e.getValue());
+                }
             }
             codigoOpt.add(tmp);
         }
+
         codigo = codigoOpt;
     }
+
+
+
 
     /**
      * Simplifica expresiones constantes y neutras
@@ -176,33 +220,73 @@ public class Optimizador {
     public void eliminarAsignacionesInutiles() {
         List<String> result = new ArrayList<>();
         Set<String> vivas = new HashSet<>();
-        vivas.add("resultado");  // considera resultado como entrada/salida
-        Pattern varPat = Pattern.compile("\\b[a-zA-Z_]\\w*\\b");
+
+        // 1) Semilla: considera vivas todas las variables “no temporales”
+        //    (por ejemplo, las globals y locales declaradas)
+        Pattern varPat = Pattern.compile("\\b([a-zA-Z_]\\w*)\\b");
+        for (String linea : codigo) {
+            if (linea.startsWith("if ") || linea.contains("call ")) {
+                Matcher m = varPat.matcher(linea);
+                while (m.find()) {
+                    String v = m.group(1);
+                    if (!v.matches("t\\d+")) vivas.add(v);
+                }
+            }
+            // añade también las variables de retorno
+            if (linea.startsWith("return ")) {
+                Matcher m = varPat.matcher(linea);
+                while (m.find()) {
+                    String v = m.group(1);
+                    if (!v.matches("t\\d+")) vivas.add(v);
+                }
+            }
+        }
+
+        // 2) Escaneo hacia atrás
         for (int i = codigo.size() - 1; i >= 0; i--) {
             String linea = codigo.get(i);
             if (linea.contains(" = ")) {
                 String[] partes = linea.split("=", 2);
                 String dest = partes[0].trim();
-                String expr = partes[1].replaceAll("//.*", "").replace(";", "").trim();
-                if (!vivas.contains(dest)) continue;
-                result.add(0, linea);
-                Matcher m = varPat.matcher(expr);
-                while (m.find()) {
-                    String var = m.group();
-                    if (!var.matches("\\d+")) vivas.add(var);
+                String expr = partes[1].replaceAll("//.*","").trim();
+
+                // Si dest no es un temporal, siempre lo mantenemos
+                if (!dest.matches("t\\d+")) {
+                    result.add(0, linea);
+                    // Y marcamos vivos todos los operadores de la expresión
+                    Matcher m = varPat.matcher(expr);
+                    while (m.find()) {
+                        String v = m.group(1);
+                        if (!v.matches("\\d+")) vivas.add(v);
+                    }
+                    continue;
                 }
-                vivas.add(dest);
+
+                // Si dest es temp, solo lo mantenemos si sigue vivo
+                if (vivas.contains(dest)) {
+                    result.add(0, linea);
+                    Matcher m = varPat.matcher(expr);
+                    while (m.find()) {
+                        String v = m.group(1);
+                        if (!v.matches("\\d+")) vivas.add(v);
+                    }
+                    vivas.add(dest);
+                }
             } else {
+                // no es asignación: la mantenemos y marcamos sus variables vivas
                 result.add(0, linea);
                 Matcher m = varPat.matcher(linea);
                 while (m.find()) {
-                    String var = m.group();
-                    if (!var.matches("\\d+")) vivas.add(var);
+                    String v = m.group(1);
+                    if (!v.matches("\\d+")) vivas.add(v);
                 }
             }
         }
+
         codigo = result;
     }
+
+
 
 
     /**

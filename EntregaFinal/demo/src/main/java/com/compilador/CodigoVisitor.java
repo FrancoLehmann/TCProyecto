@@ -185,24 +185,50 @@ public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
         return null;
     }
 
-    @Override
+   @Override
     public String visitAsignacion(MiLenguajeParser.AsignacionContext ctx) {
-        String variable = ctx.ID().getText();
-        System.out.println(" VISITOR: Encontré asignación -> " + variable);
-        String resultado = visit(ctx.expresion());
-        System.out.println(" VISITOR: Generando asignación final...");
-        generador.genAsignacion(variable, resultado);
+        String nombre = ctx.ID().getText();
+
+        // Si la declaración incluye corchetes, ctx.CA() no es nulo → es arreglo[index] = …
+        if (ctx.CA() != null) {
+            // El primer ctx.expresion(0) es el índice, el segundo (1) es el valor
+            MiLenguajeParser.ExpresionContext idxCtx   = ctx.expresion(0);
+            MiLenguajeParser.ExpresionContext valueCtx = ctx.expresion(1);
+
+            // Generar código para evaluar el índice
+            String idxTemp = visit(idxCtx);              
+            String offTemp = generador.newTemp();        
+
+            // offTemp = idxTemp * 1
+            generador.genMul(offTemp, idxTemp, "1");
+
+            // Generar código para la expresión de la derecha
+            String valTemp = visit(valueCtx);
+
+            // store valTemp into nombre[offTemp]
+            generador.genStore(valTemp, nombre, offTemp);
+        } else {
+            // Asignación simple: ID = expresion
+            MiLenguajeParser.ExpresionContext rhsCtx = ctx.expresion(0);
+            String valTemp = visit(rhsCtx);
+            generador.genAsignacion(nombre, valTemp);
+        }
+
         return null;
     }
 
     @Override
     public String visitDeclaracionVariable(MiLenguajeParser.DeclaracionVariableContext ctx) {
-        String variable = ctx.ID().getText();
-        String tipo = ctx.tipo().getText();
-        System.out.println(" VISITOR: Declaración de variable " + tipo + " " + variable);
+        String nombre = ctx.ID().getText();
+        // Si viene con [N], generamos alloc
+        if (ctx.CA() != null && ctx.INTEGER() != null) {
+            int size = Integer.parseInt(ctx.INTEGER().getText());
+            generador.genAlloc(nombre, size);
+        }
+        // Si hay inicializador (= expr), puedes seguir usando tu lógica actual:
         if (ctx.expresion() != null) {
-            String exprTemp = visit(ctx.expresion());
-            generador.genAsignacion(variable, exprTemp);
+            String temp = visit(ctx.expresion());
+            generador.genAsignacion(nombre, temp);
         }
         return null;
     }
@@ -228,4 +254,22 @@ public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
     }
 
     // ... demás overrides (visitDeclaracionFuncion, visitBloque, visitRetorno, etc.) ...
+    @Override
+    public String visitExpIndex(MiLenguajeParser.ExpIndexContext ctx) {
+        String base = ctx.ID().getText();
+        // Visitar solo el índice
+        String idxTemp = visit(ctx.expresion());
+        // Temporal para offset y para resultado
+        String offTemp = generador.newTemp();
+        String resTemp = generador.newTemp();
+
+        // offTemp = idxTemp * 1
+        generador.genMul(offTemp, idxTemp, "1");
+        // resTemp = load base[offTemp]
+        generador.genLoad(resTemp, base, offTemp);
+
+        return resTemp;
+    }
+
+
 }

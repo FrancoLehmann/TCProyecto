@@ -63,11 +63,11 @@ parametro
 
 // Declaración de variable con asignación opcional
 declaracionVariable
-    : tipo ID (IGUAL expresion)? PYC
+    : tipo ID ( CA INTEGER CC )? ( IGUAL expresion )? PYC
     ;
 
 asignacion
-    : ID IGUAL expresion PYC      // Asignación simple: x = expr;
+    : ( ID | ID CA expresion CC ) IGUAL expresion PYC      // Asignación simple: x = expr;
     | ID SUM SUM PYC              // Incremento: x++;
     | ID RES RES PYC              // Decremento: x--;
     ;
@@ -82,6 +82,7 @@ tipo
     | DOUBLE
     | VOID
     | STRING
+    | BOOL
     ;
 
 // -----------------------
@@ -102,10 +103,13 @@ expresion
     | PA expresion PC                         #expParentizada
     | ID PA argumentos? PC                    #expFuncion
     | ID                                      #expVariable
+    | ID CA expresion CC                      #expIndex
     | INTEGER                                 #expEntero
     | DECIMAL                                 #expDecimal
     | CHARACTER                               #expCaracter
     | STRING_LITERAL                          #expCadena
+    | TRUE                                    #expBooleano
+    | FALSE                                   #expBooleano
     ;
 
 // Lista de argumentos en llamadas a función
@@ -140,6 +144,9 @@ STRING    : 'String' ;
 RETURN    : 'return' ;
 BREAK     : 'break' ;
 CONTINUE  : 'continue' ;
+BOOL      : 'bool' ;
+TRUE      : 'true' ;
+FALSE     : 'false' ;
 
 // Operadores y delimitadores
 PA        : '(' ;
@@ -171,6 +178,7 @@ INTEGER   : DIGITO+ ;
 DECIMAL   : DIGITO+ '.' DIGITO+ ;
 CHARACTER : '\'' (~['\r\n] | '\\' .) '\'' ;
 STRING_LITERAL : '"' (~["\\\r\n] | '\\' .)* '"' ;
+
 
 // Identificador (después de palabras clave)
 ID : (LETRA | '_') (LETRA | DIGITO | '_')* ;

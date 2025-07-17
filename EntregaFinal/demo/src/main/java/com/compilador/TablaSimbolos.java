@@ -21,6 +21,8 @@ public class TablaSimbolos {
         private List<String> parametros;  // Solo para funciones (lista de tipos)
         private boolean usada = false; // ← nuevo campo para validar uso
         private boolean inicializada = false; // ← nuevo campo para validar inicialización
+        private boolean esArray   = false; // ← nuevo campo para validar si es un array
+        private int     arraySize = 0; // ← nuevo campo para almacenar el tamaño del array
         
         public Simbolo(String nombre, String tipo, String categoria, int linea, int columna, String ambito) {
             this.nombre = nombre;
@@ -30,6 +32,7 @@ public class TablaSimbolos {
             this.columna = columna;
             this.ambito = ambito;
             this.parametros = new ArrayList<>();
+            
         }
         
         // Getters
@@ -56,6 +59,20 @@ public class TablaSimbolos {
         }
         public void setInicializada(boolean inicializada) {
             this.inicializada = inicializada;
+        }
+
+        // Getter/setter para marcar un símbolo como arreglo
+        public boolean isArray() {return esArray;}
+        public Simbolo setArray(boolean esArray) {
+            this.esArray = esArray;
+            return this;
+        }
+
+        // Getter/setter para almacenar la longitud del arreglo
+        public int getArraySize() {return arraySize;}
+        public Simbolo setArraySize(int size) {
+            this.arraySize = size;
+            return this;
         }
         
         // Agregar un parámetro a una función

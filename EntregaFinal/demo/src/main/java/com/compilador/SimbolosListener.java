@@ -154,14 +154,28 @@ public class SimbolosListener extends MiLenguajeBaseListener {
     @Override
     public void exitDeclaracionVariable(MiLenguajeParser.DeclaracionVariableContext ctx) {
         String nombre = ctx.ID().getText();
+        int linea = ctx.ID().getSymbol().getLine();
+
+        // 1. Asegurarse de que la variable esté en la tabla
         TablaSimbolos.Simbolo simbolo = tablaSimbolos.buscar(nombre);
-        if (simbolo == null) {            
+        if (simbolo == null) {
+            errores.add("❌ [Crítico] Línea " + linea + ": Variable '" + nombre + "' no declarada");
             return;
-        }        
-        if (ctx.expresion() != null) {         
-            simbolo.setInicializada(true);        
-        }        
+        }
+
+        // 2. Si la declaración incluye [INTEGER], es un arreglo
+        if (ctx.CA() != null && ctx.INTEGER() != null) {
+            int size = Integer.parseInt(ctx.INTEGER().getText());
+            simbolo.setArray(true)
+                .setArraySize(size);
+        }
+
+        // 3. Si hay inicializador (= expresion), marcamos uso e inicialización
+        if (ctx.expresion() != null) {            
+            simbolo.setInicializada(true);
+        }
     }
+
     
     /**
      * Cuando se encuentra una asignación
@@ -192,11 +206,21 @@ public class SimbolosListener extends MiLenguajeBaseListener {
             simbolo.setInicializada(true);
         }
 
-        // 4. Type checking: comparar tipo de variable con tipo de la expresión
+      // 4. Determinar la expresión del lado derecho
+        List<MiLenguajeParser.ExpresionContext> exprs = ctx.expresion();
+        MiLenguajeParser.ExpresionContext rhs = exprs.get(exprs.size() - 1);
         String tipoVar = simbolo.getTipo();
-        String tipoExp = determinarTipoExpresion(ctx.expresion());
-        if (!"desconocido".equals(tipoExp) && !tipoVar.equals(tipoExp)) {
-            errores.add("Asignación incompatible en línea " + linea +
+        String tipoExp = determinarTipoExpresion(rhs);
+
+        // 5. Comprobar incompatibilidad de tipos,
+        //    permitiendo int -> double implícito
+        boolean incompatible = 
+            !"desconocido".equals(tipoExp)
+            && !tipoVar.equals(tipoExp)
+            && !(tipoVar.equals("double") && tipoExp.equals("int"));
+
+        if (incompatible) {
+            errores.add(" [Crítico] Línea " + linea +
                     ": variable '" + nombre + "' es de tipo '" + tipoVar +
                     "' pero se le asigna una expresión de tipo '" + tipoExp + "'");
         }
@@ -400,6 +424,8 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         }
     }
 
+    
+
     private void checkUnusedParameters() {
         for (TablaSimbolos.Simbolo s : tablaSimbolos.getTodos()) {
             // Solo parámetros (no variables locales ni funciones)
@@ -422,4 +448,54 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         checkUninitializedVariables();
         checkUnusedParameters();
     }
+
+    @Override
+    public void enterExpIndex(MiLenguajeParser.ExpIndexContext ctx) {
+        String nombre = ctx.ID().getText();
+        int linea = ctx.ID().getSymbol().getLine();
+
+        // 1) La variable debe existir
+        TablaSimbolos.Simbolo s = tablaSimbolos.buscar(nombre);
+        if (s == null) {
+            errores.add("[Crítico] Línea " + linea + ": identificador '" + nombre + "' no declarado");
+            return;
+        }
+
+        // 2) Debe ser un arreglo
+        if (!s.isArray()) {
+            errores.add(" [Crítico] Línea " + linea + ": '" + nombre + "' no es un arreglo");
+        }
+
+        // 3) El índice debe ser de tipo int
+        String tipoIdx = determinarTipoExpresion(ctx.expresion());
+        if (!"int".equals(tipoIdx)) {
+            errores.add(" [Crítico] Línea " + linea + ": índice de '" + nombre + "' debe ser int, no " + tipoIdx);
+        }
+
+        // 4) Si el índice es literal, chequear bounds y emitir warning
+        if (ctx.expresion() instanceof MiLenguajeParser.ExpEnteroContext) {
+            int idx = Integer.parseInt(ctx.expresion().getText());
+            int size = s.getArraySize();
+            if (idx < 0 || idx >= size) {
+                warnings.add(" [Warning] Línea " + linea +
+                            ": índice " + idx + " fuera de rango para '" +
+                            nombre + "[" + size + "]'");
+            }
+        }
+
+        // 5) Marcar el arreglo como usado
+        s.setUsada(true);
+    }
+
+
+    @Override
+    public void exitExpIndex(MiLenguajeParser.ExpIndexContext ctx) {
+        // Marcar la variable como usada si se accede a un índice
+        String nombre = ctx.ID().getText();
+        Simbolo s = tablaSimbolos.buscar(nombre);
+        if (s != null) {
+            s.setUsada(true);
+        }
+    }
+
 }

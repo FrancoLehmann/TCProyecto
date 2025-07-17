@@ -1,0 +1,62 @@
+// Código de tres direcciones generado automáticamente
+// Archivo: ejemplo_3_codigo_intermedio.txt
+// Total de instrucciones: 58
+
+  0: t0 = a + b
+  1: resultado = t0
+  2: t1 = 1
+  3: t2 = contadorGlobal + t1
+  4: contadorGlobal = t2
+  5: numeros = alloc 3
+  6: t3 = 0
+  7: contadorGlobal = t3
+  8: t4 = 3.14
+  9: valorPi = t4
+ 10: t5 = 'M'
+ 11: inicial = t5
+ 12: t6 = 0
+ 13: t7 = t6 * 1
+ 14: t8 = 10
+ 15: store t8 into numeros[t7]
+ 16: t9 = 1
+ 17: t10 = t9 * 1
+ 18: t11 = 20
+ 19: store t11 into numeros[t10]
+ 20: t12 = 2
+ 21: t13 = t12 * 1
+ 22: t14 = 30
+ 23: store t14 into numeros[t13]
+ 24: t15 = 0
+ 25: t16 = t15 * 1
+ 26: t17 = load numeros[t16]
+ 27: t18 = 1
+ 28: t19 = t18 * 1
+ 29: t20 = load numeros[t19]
+ 30: t21 = t17 + t20
+ 31: temp = t21
+ 32: t22 = 2
+ 33: t23 = temp * t22
+ 34: temp = t23
+ 35: t24 = 3
+ 36: t25 = temp / t24
+ 37: temp = t25
+ 38: t26 = 5
+ 39: t27 = temp % t26
+ 40: temp = t27
+ 41: t28 = 5
+ 42: param temp
+ 43: param t28
+ 44: t29 = call sumar, 2
+ 45: estado = t29
+ 46: contadorGlobal = estado
+ 47: valorPi = temp
+ 48: t30 = 'X'
+ 49: inicial = t30
+ 50: t31 = 0
+ 51: t32 = estado > t31
+ 52: if !t32 goto L0
+ 53: t33 = 10
+ 54: t34 = estado + t33
+ 55: auxiliar = t34
+ 56: estado = auxiliar
+ 57: L0:
