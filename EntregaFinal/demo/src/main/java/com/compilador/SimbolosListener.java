@@ -140,9 +140,16 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         int linea = ctx.ID().getSymbol().getLine();
         int columna = ctx.ID().getSymbol().getCharPositionInLine();
         
+        // Verificar si es array
+        String categoria = "variable";
+        if (ctx.CA() != null && ctx.CC() != null) {
+            categoria = "array";
+            tipo = tipo + "[]"; // Marcar como array en el tipo
+        }
+        
         // Crear y agregar el símbolo
         TablaSimbolos.Simbolo simbolo = new TablaSimbolos.Simbolo(
-            nombre, tipo, "variable", linea, columna, tablaSimbolos.getAmbito()
+            nombre, tipo, categoria, linea, columna, tablaSimbolos.getAmbito()
         );
         
         if (!tablaSimbolos.agregar(simbolo)) {
@@ -183,14 +190,16 @@ public class SimbolosListener extends MiLenguajeBaseListener {
             return;
         }
         
-        // Verificación de categoría (solo variables pueden ser asignadas, no funciones)
-        if (!simbolo.getCategoria().equals("variable") && !simbolo.getCategoria().equals("parametro")) {
+        // Verificación de categoría (solo variables y arrays pueden ser asignadas, no funciones)
+        if (!simbolo.getCategoria().equals("variable") && 
+            !simbolo.getCategoria().equals("parametro") && 
+            !simbolo.getCategoria().equals("array")) {
             errores.add("Error semántico en línea " + linea + 
                       ": No se puede asignar valor a '" + nombre + "' porque no es una variable");
             return;
         }
         simbolo.setUsada(true); // Marcar como usada
-        if (simbolo.getCategoria().equals("variable")) {
+        if (simbolo.getCategoria().equals("variable") || simbolo.getCategoria().equals("array")) {
             // Si hay condiciones, asumimos que la variable se inicializa aquí
             simbolo.setInicializada(true);            
         }
@@ -213,6 +222,26 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         }else{
             simbolo.setUsada(true); // Marcar como usado
             simbolo.setInicializada(true); // Marcar como inicializada si se usa en una expresión
+        }
+    }
+    
+    /**
+     * Cuando se encuentra una expresión de array
+     */
+    @Override
+    public void enterExpArray(MiLenguajeParser.ExpArrayContext ctx) {
+        String nombre = ctx.ID().getText();
+        int linea = ctx.ID().getSymbol().getLine();
+        
+        TablaSimbolos.Simbolo simbolo = tablaSimbolos.buscar(nombre);
+        if (simbolo == null) {
+            errores.add("Error semántico en línea " + linea + 
+                      ": Array '" + nombre + "' no declarado");
+        } else if (!simbolo.getCategoria().equals("array")) {
+            errores.add("Error semántico en línea " + linea + 
+                      ": '" + nombre + "' no es un array");
+        } else {
+            simbolo.setUsada(true);
         }
     }
     
@@ -307,6 +336,17 @@ public class SimbolosListener extends MiLenguajeBaseListener {
         } 
         else if (ctx instanceof MiLenguajeParser.ExpCaracterContext) {
             return "char";
+        } 
+        else if (ctx instanceof MiLenguajeParser.ExpBooleanoContext) {
+            return "bool";
+        } 
+        else if (ctx instanceof MiLenguajeParser.ExpArrayContext) {
+            MiLenguajeParser.ExpArrayContext expArray = (MiLenguajeParser.ExpArrayContext) ctx;
+            TablaSimbolos.Simbolo simbolo = tablaSimbolos.buscar(expArray.ID().getText());
+            if (simbolo != null && simbolo.getTipo().endsWith("[]")) {
+                return simbolo.getTipo().substring(0, simbolo.getTipo().length() - 2); // Remover []
+            }
+            return "desconocido";
         } 
         else if (ctx instanceof MiLenguajeParser.ExpFuncionContext) {
             MiLenguajeParser.ExpFuncionContext expFunc = (MiLenguajeParser.ExpFuncionContext) ctx;

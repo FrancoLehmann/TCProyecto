@@ -149,6 +149,27 @@ public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
         generador.getCodigo().add(temp + " = " + literal);
         return temp;
     }
+    
+    // Booleano: #expBooleano
+    @Override
+    public String visitExpBooleano(MiLenguajeParser.ExpBooleanoContext ctx) {
+        String literal = ctx.getText(); // "true" o "false"
+        System.out.println(" VISITOR: Encontré booleano -> " + literal);
+        String temp = generador.newTemp();
+        generador.getCodigo().add(temp + " = " + literal);
+        return temp;
+    }
+    
+    // Array: #expArray
+    @Override
+    public String visitExpArray(MiLenguajeParser.ExpArrayContext ctx) {
+        String arrayName = ctx.ID().getText();
+        String index = visit(ctx.expresion());
+        System.out.println(" VISITOR: Acceso a array -> " + arrayName + "[" + index + "]");
+        String temp = generador.newTemp();
+        generador.getCodigo().add(temp + " = " + arrayName + "[" + index + "]");
+        return temp;
+    }
 
     // Paréntesis: #expParentizada
     @Override
@@ -188,10 +209,21 @@ public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
     @Override
     public String visitAsignacion(MiLenguajeParser.AsignacionContext ctx) {
         String variable = ctx.ID().getText();
-        System.out.println(" VISITOR: Encontré asignación -> " + variable);
-        String resultado = visit(ctx.expresion());
-        System.out.println(" VISITOR: Generando asignación final...");
-        generador.genAsignacion(variable, resultado);
+        
+        // Verificar si es asignación a array
+        if (ctx.CA() != null && ctx.CC() != null) {
+            // Asignación a array: arr[index] = value
+            String index = visit(ctx.expresion(0)); // Primera expresión es el índice
+            String value = visit(ctx.expresion(1)); // Segunda expresión es el valor
+            System.out.println(" VISITOR: Asignación a array -> " + variable + "[" + index + "] = " + value);
+            generador.getCodigo().add(variable + "[" + index + "] = " + value);
+        } else {
+            // Asignación simple
+            System.out.println(" VISITOR: Encontré asignación -> " + variable);
+            String resultado = visit(ctx.expresion(0));
+            System.out.println(" VISITOR: Generando asignación final...");
+            generador.genAsignacion(variable, resultado);
+        }
         return null;
     }
 
@@ -199,7 +231,17 @@ public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
     public String visitDeclaracionVariable(MiLenguajeParser.DeclaracionVariableContext ctx) {
         String variable = ctx.ID().getText();
         String tipo = ctx.tipo().getText();
-        System.out.println(" VISITOR: Declaración de variable " + tipo + " " + variable);
+        
+        // Verificar si es declaración de array
+        if (ctx.CA() != null && ctx.CC() != null) {
+            String size = ctx.INTEGER().getText();
+            System.out.println(" VISITOR: Declaración de array " + tipo + " " + variable + "[" + size + "]");
+            generador.getCodigo().add("declare " + tipo + "[] " + variable + " size " + size);
+        } else {
+            System.out.println(" VISITOR: Declaración de variable " + tipo + " " + variable);
+            generador.getCodigo().add("declare " + tipo + " " + variable);
+        }
+        
         if (ctx.expresion() != null) {
             String exprTemp = visit(ctx.expresion());
             generador.genAsignacion(variable, exprTemp);

@@ -63,13 +63,15 @@ parametro
 
 // Declaración de variable con asignación opcional
 declaracionVariable
-    : tipo ID (IGUAL expresion)? PYC
+    : tipo ID (IGUAL expresion)? PYC                    // Variable simple: int x = 5;
+    | tipo ID CA INTEGER CC (IGUAL expresion)? PYC      // Array: int arr[10] = expr;
     ;
 
 asignacion
-    : ID IGUAL expresion PYC      // Asignación simple: x = expr;
-    | ID SUM SUM PYC              // Incremento: x++;
-    | ID RES RES PYC              // Decremento: x--;
+    : ID IGUAL expresion PYC                    // Asignación simple: x = expr;
+    | ID CA expresion CC IGUAL expresion PYC       // Asignación array: arr[i] = expr;
+    | ID SUM SUM PYC                            // Incremento: x++;
+    | ID RES RES PYC                            // Decremento: x--;
     ;
 
 retorno
@@ -82,6 +84,7 @@ tipo
     | DOUBLE
     | VOID
     | STRING
+    | BOOL
     ;
 
 // -----------------------
@@ -102,10 +105,13 @@ expresion
     | PA expresion PC                         #expParentizada
     | ID PA argumentos? PC                    #expFuncion
     | ID                                      #expVariable
+    | ID CA expresion CC                      #expArray
     | INTEGER                                 #expEntero
     | DECIMAL                                 #expDecimal
     | CHARACTER                               #expCaracter
     | STRING_LITERAL                          #expCadena
+    | TRUE                                    #expBooleano
+    | FALSE                                   #expBooleano
     ;
 
 // Lista de argumentos en llamadas a función
@@ -137,6 +143,9 @@ CHAR      : 'char' ;
 DOUBLE    : 'double' ;
 VOID      : 'void' ;
 STRING    : 'String' ;
+BOOL      : 'bool' ;
+TRUE      : 'true' ;
+FALSE     : 'false' ;
 RETURN    : 'return' ;
 BREAK     : 'break' ;
 CONTINUE  : 'continue' ;
